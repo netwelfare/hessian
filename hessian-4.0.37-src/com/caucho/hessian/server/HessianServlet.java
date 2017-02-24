@@ -55,7 +55,6 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.logging.Logger;
 
-import javax.servlet.GenericServlet;
 import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -74,375 +73,405 @@ import com.caucho.services.server.ServiceContext;
  * Servlet for serving Hessian services.
  */
 @SuppressWarnings("serial")
-public class HessianServlet extends HttpServlet {
-  private Class<?> _homeAPI;
-  private Object _homeImpl;
-  
-  private Class<?> _objectAPI;
-  private Object _objectImpl;
-  
-  private HessianSkeleton _homeSkeleton;
-  private HessianSkeleton _objectSkeleton;
 
-  private SerializerFactory _serializerFactory;
+public class HessianServlet extends HttpServlet
+{
+	private Class<?> _homeAPI;
+	private Object _homeImpl;
 
-  public HessianServlet()
-  {
-  }
+	private Class<?> _objectAPI;
+	private Object _objectImpl;
 
-  public String getServletInfo()
-  {
-    return "Hessian Servlet";
-  }
+	private HessianSkeleton _homeSkeleton;
+	private HessianSkeleton _objectSkeleton;
 
-  /**
-   * Sets the home api.
-   */
-  public void setHomeAPI(Class<?> api)
-  {
-    _homeAPI = api;
-  }
+	private SerializerFactory _serializerFactory;
 
-  /**
-   * Sets the home implementation
-   */
-  public void setHome(Object home)
-  {
-    _homeImpl = home;
-  }
+	public HessianServlet()
+	{
+	}
 
-  /**
-   * Sets the object api.
-   */
-  public void setObjectAPI(Class<?> api)
-  {
-    _objectAPI = api;
-  }
+	public String getServletInfo()
+	{
+		return "Hessian Servlet";
+	}
 
-  /**
-   * Sets the object implementation
-   */
-  public void setObject(Object object)
-  {
-    _objectImpl = object;
-  }
+	/**
+	 * Sets the home api.
+	 */
+	public void setHomeAPI(Class<?> api)
+	{
+		_homeAPI = api;
+	}
 
-  /**
-   * Sets the service class.
-   */
-  public void setService(Object service)
-  {
-    setHome(service);
-  }
+	/**
+	 * Sets the home implementation
+	 */
+	public void setHome(Object home)
+	{
+		_homeImpl = home;
+	}
 
-  /**
-   * Sets the api-class.
-   */
-  public void setAPIClass(Class<?> api)
-  {
-    setHomeAPI(api);
-  }
+	/**
+	 * Sets the object api.
+	 */
+	public void setObjectAPI(Class<?> api)
+	{
+		_objectAPI = api;
+	}
 
-  /**
-   * Gets the api-class.
-   */
-  public Class<?> getAPIClass()
-  {
-    return _homeAPI;
-  }
+	/**
+	 * Sets the object implementation
+	 */
+	public void setObject(Object object)
+	{
+		_objectImpl = object;
+	}
 
-  /**
-   * Sets the serializer factory.
-   */
-  public void setSerializerFactory(SerializerFactory factory)
-  {
-    _serializerFactory = factory;
-  }
+	/**
+	 * Sets the service class.
+	 */
+	public void setService(Object service)
+	{
+		setHome(service);
+	}
 
-  /**
-   * Gets the serializer factory.
-   */
-  public SerializerFactory getSerializerFactory()
-  {
-    if (_serializerFactory == null)
-      _serializerFactory = new SerializerFactory();
+	/**
+	 * Sets the api-class.
+	 */
+	public void setAPIClass(Class<?> api)
+	{
+		setHomeAPI(api);
+	}
 
-    return _serializerFactory;
-  }
+	/**
+	 * Gets the api-class.
+	 */
+	public Class<?> getAPIClass()
+	{
+		return _homeAPI;
+	}
 
-  /**
-   * Sets the serializer send collection java type.
-   */
-  public void setSendCollectionType(boolean sendType)
-  {
-    getSerializerFactory().setSendCollectionType(sendType);
-  }
+	/**
+	 * Sets the serializer factory.
+	 */
+	public void setSerializerFactory(SerializerFactory factory)
+	{
+		_serializerFactory = factory;
+	}
 
-  /**
-   * Sets the debugging flag.
-   */
-  public void setDebug(boolean isDebug)
-  {
-  }
+	/**
+	 * Gets the serializer factory.
+	 */
+	public SerializerFactory getSerializerFactory()
+	{
+		if (_serializerFactory == null)
+			_serializerFactory = new SerializerFactory();
 
-  /**
-   * Sets the debugging log name.
-   */
-  public void setLogName(String name)
-  {
-    // _log = Logger.getLogger(name);
-  }
+		return _serializerFactory;
+	}
 
-  /**
-   * Initialize the service, including the service object.
-   */
-  public void init(ServletConfig config)
-    throws ServletException
-  {
-    super.init(config);
-    
-    try {
-      if (_homeImpl != null) {
-      }
-      else if (getInitParameter("home-class") != null) {
-        String className = getInitParameter("home-class");
+	/**
+	 * Sets the serializer send collection java type.
+	 */
+	public void setSendCollectionType(boolean sendType)
+	{
+		getSerializerFactory().setSendCollectionType(sendType);
+	}
 
-        Class<?> homeClass = loadClass(className);
+	/**
+	 * Sets the debugging flag.
+	 */
+	public void setDebug(boolean isDebug)
+	{
+	}
 
-        _homeImpl = homeClass.newInstance();
+	/**
+	 * Sets the debugging log name.
+	 */
+	public void setLogName(String name)
+	{
+		// _log = Logger.getLogger(name);
+	}
 
-        init(_homeImpl);
-      }
-      else if (getInitParameter("service-class") != null) {
-        String className = getInitParameter("service-class");
+	/**
+	 * Initialize the service, including the service object.
+	 */
+	public void init(ServletConfig config) throws ServletException
+	{
+		super.init(config);
 
-        Class<?> homeClass = loadClass(className);
+		try
+		{
+			if (_homeImpl != null)
+			{
+			}
+			else if (getInitParameter("home-class") != null)
+			{
+				String className = getInitParameter("home-class");
 
-        _homeImpl = homeClass.newInstance();
+				Class<?> homeClass = loadClass(className);
 
-        init(_homeImpl);
-      }
-      else {
-        if (getClass().equals(HessianServlet.class))
-          throw new ServletException("server must extend HessianServlet");
+				_homeImpl = homeClass.newInstance();
 
-        _homeImpl = this;
-      }
+				init(_homeImpl);
+			}
+			else if (getInitParameter("service-class") != null)
+			{
+				String className = getInitParameter("service-class");
 
-      if (_homeAPI != null) {
-      }
-      else if (getInitParameter("home-api") != null) {
-        String className = getInitParameter("home-api");
+				Class<?> homeClass = loadClass(className);
 
-        _homeAPI = loadClass(className);
-      }
-      else if (getInitParameter("api-class") != null) {
-        String className = getInitParameter("api-class");
+				_homeImpl = homeClass.newInstance();
 
-        _homeAPI = loadClass(className);
-      }
-      else if (_homeImpl != null) {
-        _homeAPI = findRemoteAPI(_homeImpl.getClass());
+				init(_homeImpl);
+			}
+			else
+			{
+				if (getClass().equals(HessianServlet.class))
+					throw new ServletException("server must extend HessianServlet");
 
-        if (_homeAPI == null)
-          _homeAPI = _homeImpl.getClass();
-        
-        _homeAPI = _homeImpl.getClass();
-      }
-      
-      if (_objectImpl != null) {
-      }
-      else if (getInitParameter("object-class") != null) {
-        String className = getInitParameter("object-class");
+				_homeImpl = this;
+			}
 
-        Class<?> objectClass = loadClass(className);
+			if (_homeAPI != null)
+			{
+			}
+			else if (getInitParameter("home-api") != null)
+			{
+				String className = getInitParameter("home-api");
 
-        _objectImpl = objectClass.newInstance();
+				_homeAPI = loadClass(className);
+			}
+			else if (getInitParameter("api-class") != null)
+			{
+				String className = getInitParameter("api-class");
 
-        init(_objectImpl);
-      }
+				_homeAPI = loadClass(className);
+			}
+			else if (_homeImpl != null)
+			{
+				_homeAPI = findRemoteAPI(_homeImpl.getClass());
 
-      if (_objectAPI != null) {
-      }
-      else if (getInitParameter("object-api") != null) {
-        String className = getInitParameter("object-api");
+				if (_homeAPI == null)
+					_homeAPI = _homeImpl.getClass();
 
-        _objectAPI = loadClass(className);
-      }
-      else if (_objectImpl != null)
-        _objectAPI = _objectImpl.getClass();
+				_homeAPI = _homeImpl.getClass();
+			}
 
-      _homeSkeleton = new HessianSkeleton(_homeImpl, _homeAPI);
-      
-      if (_objectAPI != null)
-        _homeSkeleton.setObjectClass(_objectAPI);
+			if (_objectImpl != null)
+			{
+			}
+			else if (getInitParameter("object-class") != null)
+			{
+				String className = getInitParameter("object-class");
 
-      if (_objectImpl != null) {
-        _objectSkeleton = new HessianSkeleton(_objectImpl, _objectAPI);
-        _objectSkeleton.setHomeClass(_homeAPI);
-      }
-      else
-        _objectSkeleton = _homeSkeleton;
+				Class<?> objectClass = loadClass(className);
 
-      if ("true".equals(getInitParameter("debug"))) {
-      }
+				_objectImpl = objectClass.newInstance();
 
-      if ("false".equals(getInitParameter("send-collection-type")))
-        setSendCollectionType(false);
-    } catch (ServletException e) {
-      throw e;
-    } catch (Exception e) {
-      throw new ServletException(e);
-    }
-  }
+				init(_objectImpl);
+			}
 
-  private Class<?> findRemoteAPI(Class<?> implClass)
-  {
-    // hessian/34d0
-    return null;
-    
-    /*
-    if (implClass == null || implClass.equals(GenericService.class))
-      return null;
-    
-    Class []interfaces = implClass.getInterfaces();
+			if (_objectAPI != null)
+			{
+			}
+			else if (getInitParameter("object-api") != null)
+			{
+				String className = getInitParameter("object-api");
 
-    if (interfaces.length == 1)
-      return interfaces[0];
+				_objectAPI = loadClass(className);
+			}
+			else if (_objectImpl != null)
+				_objectAPI = _objectImpl.getClass();
 
-    return findRemoteAPI(implClass.getSuperclass());
-    */
-  }
+			_homeSkeleton = new HessianSkeleton(_homeImpl, _homeAPI);
 
-  private Class<?> loadClass(String className)
-    throws ClassNotFoundException
-  {
-    ClassLoader loader = getContextClassLoader();
-    
-    if (loader != null)
-      return Class.forName(className, false, loader);
-    else
-      return Class.forName(className);
-  }
+			if (_objectAPI != null)
+				_homeSkeleton.setObjectClass(_objectAPI);
 
-  protected ClassLoader getContextClassLoader()
-  {
-    return Thread.currentThread().getContextClassLoader();
-  }
+			if (_objectImpl != null)
+			{
+				_objectSkeleton = new HessianSkeleton(_objectImpl, _objectAPI);
+				_objectSkeleton.setHomeClass(_homeAPI);
+			}
+			else
+				_objectSkeleton = _homeSkeleton;
 
-  private void init(Object service)
-    throws ServletException
-  {
-    if (! this.getClass().equals(HessianServlet.class)) {
-    }
-    else if (service instanceof Service)
-      ((Service) service).init(getServletConfig());
-    else if (service instanceof Servlet)
-      ((Servlet) service).init(getServletConfig());
-  }
-  
-  /**
-   * Execute a request.  The path-info of the request selects the bean.
-   * Once the bean's selected, it will be applied.
-   */
-  public void service(ServletRequest request, ServletResponse response)
-    throws IOException, ServletException
-  {
-    HttpServletRequest req = (HttpServletRequest) request;
-    HttpServletResponse res = (HttpServletResponse) response;
+			if ("true".equals(getInitParameter("debug")))
+			{
+			}
 
-    if (! req.getMethod().equals("POST")) {
-      res.setStatus(500); // , "Hessian Requires POST");
-      PrintWriter out = res.getWriter();
+			if ("false".equals(getInitParameter("send-collection-type")))
+				setSendCollectionType(false);
+		}
+		catch (ServletException e)
+		{
+			throw e;
+		}
+		catch (Exception e)
+		{
+			throw new ServletException(e);
+		}
+	}
 
-      res.setContentType("text/html");
-      out.println("<h1>Hessian Requires POST</h1>");
-      
-      return;
-    }
+	private Class<?> findRemoteAPI(Class<?> implClass)
+	{
+		// hessian/34d0
+		return null;
 
-    String serviceId = req.getPathInfo();
-    String objectId = req.getParameter("id");
-    if (objectId == null)
-      objectId = req.getParameter("ejbid");
+		/*
+		if (implClass == null || implClass.equals(GenericService.class))
+		  return null;
+		
+		Class []interfaces = implClass.getInterfaces();
+		
+		if (interfaces.length == 1)
+		  return interfaces[0];
+		
+		return findRemoteAPI(implClass.getSuperclass());
+		*/
+	}
 
-    ServiceContext.begin(req, res, serviceId, objectId);
+	private Class<?> loadClass(String className) throws ClassNotFoundException
+	{
+		ClassLoader loader = getContextClassLoader();
 
-    try {
-      InputStream is = request.getInputStream();
-      OutputStream os = response.getOutputStream();
+		if (loader != null)
+			return Class.forName(className, false, loader);
+		else
+			return Class.forName(className);
+	}
 
-      response.setContentType("x-application/hessian");
+	protected ClassLoader getContextClassLoader()
+	{
+		return Thread.currentThread().getContextClassLoader();
+	}
 
-      SerializerFactory serializerFactory = getSerializerFactory();
+	private void init(Object service) throws ServletException
+	{
+		if (!this.getClass().equals(HessianServlet.class))
+		{
+		}
+		else if (service instanceof Service)
+			((Service) service).init(getServletConfig());
+		else if (service instanceof Servlet)
+			((Servlet) service).init(getServletConfig());
+	}
 
-      invoke(is, os, objectId, serializerFactory);
-    } catch (RuntimeException e) {
-      throw e;
-    } catch (ServletException e) {
-      throw e;
-    } catch (Throwable e) {
-      throw new ServletException(e);
-    } finally {
-      ServiceContext.end();
-    }
-  }
-  
-  protected void invoke(InputStream is, OutputStream os,
-                        String objectId,
-                        SerializerFactory serializerFactory)
-    throws Exception
-  {
-    if (objectId != null)
-      _objectSkeleton.invoke(is, os, serializerFactory);
-    else
-      _homeSkeleton.invoke(is, os, serializerFactory);
-  }
+	/**
+	 * Execute a request.  The path-info of the request selects the bean.
+	 * Once the bean's selected, it will be applied.
+	 */
+	public void service(ServletRequest request, ServletResponse response) throws IOException, ServletException
+	{
+		HttpServletRequest req = (HttpServletRequest) request;
+		HttpServletResponse res = (HttpServletResponse) response;
 
-  protected Hessian2Input createHessian2Input(InputStream is)
-  {
-    return new Hessian2Input(is);
-  }
+		if (!req.getMethod().equals("POST"))
+		{
+			res.setStatus(500); // , "Hessian Requires POST");
+			PrintWriter out = res.getWriter();
 
-  static class LogWriter extends Writer {
-    private Logger _log;
-    private StringBuilder _sb = new StringBuilder();
+			res.setContentType("text/html");
+			out.println("<h1>Hessian Requires POST</h1>");
 
-    LogWriter(Logger log)
-    {
-      _log = log;
-    }
+			return;
+		}
 
-    public void write(char ch)
-    {
-      if (ch == '\n' && _sb.length() > 0) {
-        _log.fine(_sb.toString());
-        _sb.setLength(0);
-      }
-      else
-        _sb.append((char) ch);
-    }
+		String serviceId = req.getPathInfo();
+		String objectId = req.getParameter("id");
+		if (objectId == null)
+			objectId = req.getParameter("ejbid");
 
-    public void write(char []buffer, int offset, int length)
-    {
-      for (int i = 0; i < length; i++) {
-        char ch = buffer[offset + i];
+		ServiceContext.begin(req, res, serviceId, objectId);
 
-        if (ch == '\n' && _sb.length() > 0) {
-          _log.fine(_sb.toString());
-          _sb.setLength(0);
-        }
-        else
-          _sb.append((char) ch);
-      }
-    }
+		try
+		{
+			InputStream is = request.getInputStream();
+			OutputStream os = response.getOutputStream();
 
-    public void flush()
-    {
-    }
+			response.setContentType("x-application/hessian");
 
-    public void close()
-    {
-    }
-  }
+			SerializerFactory serializerFactory = getSerializerFactory();
+
+			invoke(is, os, objectId, serializerFactory);
+		}
+		catch (RuntimeException e)
+		{
+			throw e;
+		}
+		catch (ServletException e)
+		{
+			throw e;
+		}
+		catch (Throwable e)
+		{
+			throw new ServletException(e);
+		}
+		finally
+		{
+			ServiceContext.end();
+		}
+	}
+
+	protected void invoke(InputStream is, OutputStream os, String objectId, SerializerFactory serializerFactory)
+			throws Exception
+	{
+		if (objectId != null)
+			_objectSkeleton.invoke(is, os, serializerFactory);
+		else
+			_homeSkeleton.invoke(is, os, serializerFactory);
+	}
+
+	protected Hessian2Input createHessian2Input(InputStream is)
+	{
+		return new Hessian2Input(is);
+	}
+
+	static class LogWriter extends Writer
+	{
+		private Logger _log;
+		private StringBuilder _sb = new StringBuilder();
+
+		LogWriter(Logger log)
+		{
+			_log = log;
+		}
+
+		public void write(char ch)
+		{
+			if (ch == '\n' && _sb.length() > 0)
+			{
+				_log.fine(_sb.toString());
+				_sb.setLength(0);
+			}
+			else
+				_sb.append((char) ch);
+		}
+
+		public void write(char[] buffer, int offset, int length)
+		{
+			for (int i = 0; i < length; i++)
+			{
+				char ch = buffer[offset + i];
+
+				if (ch == '\n' && _sb.length() > 0)
+				{
+					_log.fine(_sb.toString());
+					_sb.setLength(0);
+				}
+				else
+					_sb.append((char) ch);
+			}
+		}
+
+		public void flush()
+		{
+		}
+
+		public void close()
+		{
+		}
+	}
 }
