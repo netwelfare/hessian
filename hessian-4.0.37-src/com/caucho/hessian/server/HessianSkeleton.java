@@ -71,346 +71,354 @@ import com.caucho.services.server.ServiceContext;
 /**
  * Proxy class for Hessian services.
  */
-public class HessianSkeleton extends AbstractSkeleton {
-  private static final Logger log
-    = Logger.getLogger(HessianSkeleton.class.getName());
+public class HessianSkeleton extends AbstractSkeleton
+{
+	private static final Logger log = Logger.getLogger(HessianSkeleton.class.getName());
 
-  private boolean _isDebug;
-  
-  private HessianInputFactory _inputFactory = new HessianInputFactory();
-  private HessianFactory _hessianFactory = new HessianFactory();
+	private boolean _isDebug;
 
-  private Object _service;
+	private HessianInputFactory _inputFactory = new HessianInputFactory();
+	private HessianFactory _hessianFactory = new HessianFactory();
 
-  /**
-   * Create a new hessian skeleton.
-   *
-   * @param service the underlying service object.
-   * @param apiClass the API interface
-   */
-  public HessianSkeleton(Object service, Class<?> apiClass)
-  {
-    super(apiClass);
+	private Object _service;
 
-    if (service == null)
-      service = this;
+	/**
+	 * Create a new hessian skeleton.
+	 *
+	 * @param service the underlying service object.
+	 * @param apiClass the API interface
+	 */
+	public HessianSkeleton(Object service, Class<?> apiClass)
+	{
+		super(apiClass);
 
-    _service = service;
+		if (service == null)
+			service = this;
 
-    if (! apiClass.isAssignableFrom(service.getClass()))
-      throw new IllegalArgumentException("Service " + service + " must be an instance of " + apiClass.getName());
-  }
+		_service = service;
 
-  /**
-   * Create a new hessian skeleton.
-   *
-   * @param service the underlying service object.
-   * @param apiClass the API interface
-   */
-  public HessianSkeleton(Class<?> apiClass)
-  {
-    super(apiClass);
-  }
+		if (!apiClass.isAssignableFrom(service.getClass()))
+			throw new IllegalArgumentException("Service " + service + " must be an instance of " + apiClass.getName());
+	}
 
-  public void setDebug(boolean isDebug)
-  {
-    _isDebug = isDebug;
-  }
+	/**
+	 * Create a new hessian skeleton.
+	 *
+	 * @param service the underlying service object.
+	 * @param apiClass the API interface
+	 */
+	public HessianSkeleton(Class<?> apiClass)
+	{
+		super(apiClass);
+	}
 
-  public boolean isDebug()
-  {
-    return _isDebug;
-  }
-  
-  public void setHessianFactory(HessianFactory factory)
-  {
-    _hessianFactory = factory;
-  }
+	public void setDebug(boolean isDebug)
+	{
+		_isDebug = isDebug;
+	}
 
-  /**
-   * Invoke the object with the request from the input stream.
-   *
-   * @param in the Hessian input stream
-   * @param out the Hessian output stream
-   */
-  public void invoke(InputStream is, OutputStream os)
-    throws Exception
-  {
-    invoke(is, os, null);
-  }
+	public boolean isDebug()
+	{
+		return _isDebug;
+	}
 
-  /**
-   * Invoke the object with the request from the input stream.
-   *
-   * @param in the Hessian input stream
-   * @param out the Hessian output stream
-   */
-  public void invoke(InputStream is, OutputStream os,
-                     SerializerFactory serializerFactory)
-    throws Exception
-  {
-    boolean isDebug = false;
+	public void setHessianFactory(HessianFactory factory)
+	{
+		_hessianFactory = factory;
+	}
 
-    if (isDebugInvoke()) {
-      isDebug = true;
+	/**
+	 * Invoke the object with the request from the input stream.
+	 *
+	 * @param in the Hessian input stream
+	 * @param out the Hessian output stream
+	 */
+	public void invoke(InputStream is, OutputStream os) throws Exception
+	{
+		invoke(is, os, null);
+	}
 
-      PrintWriter dbg = createDebugPrintWriter();
-      HessianDebugInputStream dIs = new HessianDebugInputStream(is, dbg);
-      dIs.startTop2();
-      is = dIs;
-      HessianDebugOutputStream dOs = new HessianDebugOutputStream(os, dbg);
-      dOs.startTop2();
-      os = dOs;
-    }
+	/**
+	 * Invoke the object with the request from the input stream.
+	 *
+	 * @param in the Hessian input stream
+	 * @param out the Hessian output stream
+	 */
+	public void invoke(InputStream is, OutputStream os, SerializerFactory serializerFactory) throws Exception
+	{
+		boolean isDebug = false;
 
-    HessianInputFactory.HeaderType header = _inputFactory.readHeader(is);
+		if (isDebugInvoke())
+		{
+			isDebug = true;
+			PrintWriter dbg = createDebugPrintWriter();
+			HessianDebugInputStream dIs = new HessianDebugInputStream(is, dbg);
+			dIs.startTop2();
+			is = dIs;
+			HessianDebugOutputStream dOs = new HessianDebugOutputStream(os, dbg);
+			dOs.startTop2();
+			os = dOs;
+		}
 
-    AbstractHessianInput in;
-    AbstractHessianOutput out;
+		HessianInputFactory.HeaderType header = _inputFactory.readHeader(is);
 
-    switch (header) {
-    case CALL_1_REPLY_1:
-      in = _hessianFactory.createHessianInput(is);
-      out = _hessianFactory.createHessianOutput(os);
-      break;
+		AbstractHessianInput in;
+		AbstractHessianOutput out;
 
-    case CALL_1_REPLY_2:
-      in = _hessianFactory.createHessianInput(is);
-      out = _hessianFactory.createHessian2Output(os);
-      break;
+		switch (header)
+		{
+			case CALL_1_REPLY_1:
+				in = _hessianFactory.createHessianInput(is);
+				out = _hessianFactory.createHessianOutput(os);
+				break;
 
-    case HESSIAN_2:
-      in = _hessianFactory.createHessian2Input(is);
-      in.readCall();
-      out = _hessianFactory.createHessian2Output(os);
-      break;
+			case CALL_1_REPLY_2:
+				in = _hessianFactory.createHessianInput(is);
+				out = _hessianFactory.createHessian2Output(os);
+				break;
 
-    default:
-      throw new IllegalStateException(header + " is an unknown Hessian call");
-    }
+			case HESSIAN_2:
+				in = _hessianFactory.createHessian2Input(is);
+				in.readCall();
+				out = _hessianFactory.createHessian2Output(os);
+				break;
 
-    if (serializerFactory != null) {
-      in.setSerializerFactory(serializerFactory);
-      out.setSerializerFactory(serializerFactory);
-    }
+			default:
+				throw new IllegalStateException(header + " is an unknown Hessian call");
+		}
 
-    try {
-      invoke(_service, in, out);
-    } finally {
-      in.close();
-      out.close();
+		if (serializerFactory != null)
+		{
+			in.setSerializerFactory(serializerFactory);
+			out.setSerializerFactory(serializerFactory);
+		}
 
-      if (isDebug)
-        os.close();
-    }
-  }
+		try
+		{
+			invoke(_service, in, out);
+		}
+		finally
+		{
+			in.close();
+			out.close();
 
-  /**
-   * Invoke the object with the request from the input stream.
-   *
-   * @param in the Hessian input stream
-   * @param out the Hessian output stream
-   */
-  public void invoke(AbstractHessianInput in, AbstractHessianOutput out)
-    throws Exception
-  {
-    invoke(_service, in, out);
-  }
+			if (isDebug)
+				os.close();
+		}
+	}
 
-  /**
-   * Invoke the object with the request from the input stream.
-   *
-   * @param in the Hessian input stream
-   * @param out the Hessian output stream
-   */
-  public void invoke(Object service,
-                     AbstractHessianInput in,
-                     AbstractHessianOutput out)
-    throws Exception
-  {
-    ServiceContext context = ServiceContext.getContext();
+	/**
+	 * Invoke the object with the request from the input stream.
+	 *
+	 * @param in the Hessian input stream
+	 * @param out the Hessian output stream
+	 */
+	public void invoke(AbstractHessianInput in, AbstractHessianOutput out) throws Exception
+	{
+		invoke(_service, in, out);
+	}
 
-    // backward compatibility for some frameworks that don't read
-    // the call type first
-    in.skipOptionalCall();
+	/**
+	 * Invoke the object with the request from the input stream.
+	 *
+	 * @param in the Hessian input stream
+	 * @param out the Hessian output stream
+	 */
+	public void invoke(Object service, AbstractHessianInput in, AbstractHessianOutput out) throws Exception
+	{
+		ServiceContext context = ServiceContext.getContext();
 
-    // Hessian 1.0 backward compatibility
-    String header;
-    while ((header = in.readHeader()) != null) {
-      Object value = in.readObject();
+		// backward compatibility for some frameworks that don't read
+		// the call type first
+		in.skipOptionalCall();
 
-      context.addHeader(header, value);
-    }
+		// Hessian 1.0 backward compatibility
+		String header;
+		while ((header = in.readHeader()) != null)
+		{
+			Object value = in.readObject();
 
-    String methodName = in.readMethod();
-    int argLength = in.readMethodArgLength();
+			context.addHeader(header, value);
+		}
 
-    Method method;
+		String methodName = in.readMethod();
+		int argLength = in.readMethodArgLength();
 
-    method = getMethod(methodName + "__" + argLength);
+		Method method;
 
-    if (method == null)
-      method = getMethod(methodName);
+		method = getMethod(methodName + "__" + argLength);
 
-    if (method != null) {
-    }
-    else if ("_hessian_getAttribute".equals(methodName)) {
-      String attrName = in.readString();
-      in.completeCall();
+		if (method == null)
+			method = getMethod(methodName);
 
-      String value = null;
+		if (method != null)
+		{
+		}
+		else if ("_hessian_getAttribute".equals(methodName))
+		{
+			String attrName = in.readString();
+			in.completeCall();
 
-      if ("java.api.class".equals(attrName))
-        value = getAPIClassName();
-      else if ("java.home.class".equals(attrName))
-        value = getHomeClassName();
-      else if ("java.object.class".equals(attrName))
-        value = getObjectClassName();
+			String value = null;
 
-      out.writeReply(value);
-      out.close();
-      return;
-    }
-    else if (method == null) {
-      out.writeFault("NoSuchMethodException",
-                     escapeMessage("The service has no method named: " + in.getMethod()),
-                     null);
-      out.close();
-      return;
-    }
+			if ("java.api.class".equals(attrName))
+				value = getAPIClassName();
+			else if ("java.home.class".equals(attrName))
+				value = getHomeClassName();
+			else if ("java.object.class".equals(attrName))
+				value = getObjectClassName();
 
-    Class<?> []args = method.getParameterTypes();
+			out.writeReply(value);
+			out.close();
+			return;
+		}
+		else if (method == null)
+		{
+			out.writeFault("NoSuchMethodException", escapeMessage("The service has no method named: " + in.getMethod()),
+					null);
+			out.close();
+			return;
+		}
 
-    if (argLength != args.length && argLength >= 0) {
-      out.writeFault("NoSuchMethod",
-                     escapeMessage("method " + method + " argument length mismatch, received length=" + argLength),
-                     null);
-      out.close();
-      return;
-    }
+		Class<?>[] args = method.getParameterTypes();
 
-    Object []values = new Object[args.length];
+		if (argLength != args.length && argLength >= 0)
+		{
+			out.writeFault("NoSuchMethod",
+					escapeMessage("method " + method + " argument length mismatch, received length=" + argLength),
+					null);
+			out.close();
+			return;
+		}
 
-    for (int i = 0; i < args.length; i++) {
-      // XXX: needs Marshal object
-      values[i] = in.readObject(args[i]);
-    }
+		Object[] values = new Object[args.length];
 
-    Object result = null;
+		for (int i = 0; i < args.length; i++)
+		{
+			// XXX: needs Marshal object
+			values[i] = in.readObject(args[i]);
+		}
 
-    try {
-      result = method.invoke(service, values);
-    } catch (Exception e) {
-      Throwable e1 = e;
-      if (e1 instanceof InvocationTargetException)
-        e1 = ((InvocationTargetException) e).getTargetException();
+		Object result = null;
 
-      log.log(Level.FINE, this + " " + e1.toString(), e1);
+		try
+		{
+			result = method.invoke(service, values);
+		}
+		catch (Exception e)
+		{
+			Throwable e1 = e;
+			if (e1 instanceof InvocationTargetException)
+				e1 = ((InvocationTargetException) e).getTargetException();
 
-      out.writeFault("ServiceException", 
-                     escapeMessage(e1.getMessage()), 
-                     e1);
-      out.close();
-      return;
-    }
+			log.log(Level.FINE, this + " " + e1.toString(), e1);
 
-    // The complete call needs to be after the invoke to handle a
-    // trailing InputStream
-    in.completeCall();
+			out.writeFault("ServiceException", escapeMessage(e1.getMessage()), e1);
+			out.close();
+			return;
+		}
 
-    out.writeReply(result);
+		// The complete call needs to be after the invoke to handle a
+		// trailing InputStream
+		in.completeCall();
 
-    out.close();
-  }
-  
-  private String escapeMessage(String msg)
-  {
-    if (msg == null)
-      return null;
-    
-    StringBuilder sb = new StringBuilder();
-    
-    int length = msg.length();
-    for (int i = 0; i < length; i++) {
-      char ch = msg.charAt(i);
-      
-      switch (ch) {
-      case '<':
-        sb.append("&lt;");
-        break;
-      case '>':
-        sb.append("&gt;");
-        break;
-      case 0x0:
-        sb.append("&#00;");
-        break;
-      case '&':
-        sb.append("&amp;");
-        break;
-      default:
-        sb.append(ch);
-        break;
-      }
-    }
-    
-    return sb.toString();
-  }
+		out.writeReply(result);
 
-  protected boolean isDebugInvoke()
-  {
-    return (log.isLoggable(Level.FINEST)
-            || isDebug() && log.isLoggable(Level.FINE));
-  }
-  
-  /**
-   * Creates the PrintWriter for debug output. The default is to
-   * write to java.util.Logging.
-   */
-  protected PrintWriter createDebugPrintWriter()
-    throws IOException
-  {
-    return new PrintWriter(new LogWriter(log));
-  }
+		out.close();
+	}
 
-  static class LogWriter extends Writer {
-    private Logger _log;
-    private StringBuilder _sb = new StringBuilder();
+	private String escapeMessage(String msg)
+	{
+		if (msg == null)
+			return null;
 
-    LogWriter(Logger log)
-    {
-      _log = log;
-    }
+		StringBuilder sb = new StringBuilder();
 
-    public void write(char ch)
-    {
-      if (ch == '\n' && _sb.length() > 0) {
-        _log.fine(_sb.toString());
-        _sb.setLength(0);
-      }
-      else
-        _sb.append((char) ch);
-    }
+		int length = msg.length();
+		for (int i = 0; i < length; i++)
+		{
+			char ch = msg.charAt(i);
 
-    public void write(char []buffer, int offset, int length)
-    {
-      for (int i = 0; i < length; i++) {
-        char ch = buffer[offset + i];
+			switch (ch)
+			{
+				case '<':
+					sb.append("&lt;");
+					break;
+				case '>':
+					sb.append("&gt;");
+					break;
+				case 0x0:
+					sb.append("&#00;");
+					break;
+				case '&':
+					sb.append("&amp;");
+					break;
+				default:
+					sb.append(ch);
+					break;
+			}
+		}
 
-        if (ch == '\n' && _sb.length() > 0) {
-          _log.fine(_sb.toString());
-          _sb.setLength(0);
-        }
-        else
-          _sb.append((char) ch);
-      }
-    }
+		return sb.toString();
+	}
 
-    public void flush()
-    {
-    }
+	protected boolean isDebugInvoke()
+	{
+		return (log.isLoggable(Level.FINEST) || isDebug() && log.isLoggable(Level.FINE));
+	}
 
-    public void close()
-    {
-    }
-  }
+	/**
+	 * Creates the PrintWriter for debug output. The default is to
+	 * write to java.util.Logging.
+	 */
+	protected PrintWriter createDebugPrintWriter() throws IOException
+	{
+		return new PrintWriter(new LogWriter(log));
+	}
+
+	static class LogWriter extends Writer
+	{
+		private Logger _log;
+		private StringBuilder _sb = new StringBuilder();
+
+		LogWriter(Logger log)
+		{
+			_log = log;
+		}
+
+		public void write(char ch)
+		{
+			if (ch == '\n' && _sb.length() > 0)
+			{
+				_log.fine(_sb.toString());
+				_sb.setLength(0);
+			}
+			else
+				_sb.append((char) ch);
+		}
+
+		public void write(char[] buffer, int offset, int length)
+		{
+			for (int i = 0; i < length; i++)
+			{
+				char ch = buffer[offset + i];
+
+				if (ch == '\n' && _sb.length() > 0)
+				{
+					_log.fine(_sb.toString());
+					_sb.setLength(0);
+				}
+				else
+					_sb.append((char) ch);
+			}
+		}
+
+		public void flush()
+		{
+		}
+
+		public void close()
+		{
+		}
+	}
 }

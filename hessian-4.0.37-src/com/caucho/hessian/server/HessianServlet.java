@@ -84,7 +84,6 @@ public class HessianServlet extends HttpServlet
 
 	private HessianSkeleton _homeSkeleton;
 	private HessianSkeleton _objectSkeleton;
-
 	private SerializerFactory _serializerFactory;
 
 	public HessianServlet()
@@ -367,7 +366,6 @@ public class HessianServlet extends HttpServlet
 	{
 		HttpServletRequest req = (HttpServletRequest) request;
 		HttpServletResponse res = (HttpServletResponse) response;
-
 		if (!req.getMethod().equals("POST"))
 		{
 			res.setStatus(500); // , "Hessian Requires POST");
@@ -375,7 +373,6 @@ public class HessianServlet extends HttpServlet
 
 			res.setContentType("text/html");
 			out.println("<h1>Hessian Requires POST</h1>");
-
 			return;
 		}
 
